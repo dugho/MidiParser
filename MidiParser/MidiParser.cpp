@@ -13,6 +13,7 @@ using namespace std;
 
 void printAllMessagesOfEachTrack(MidiFile& midifile);
 void printAllMessagesOfEachTrack(MidiFile& midifile, Options options);
+void printAllMessagesOfEachTrack_DST(MidiFile& midifile, Options options);
 void pritConcurrentMessageOfAllTrack(MidiFile& midifile);
 string hexify(int i);
 
@@ -35,6 +36,7 @@ int main(int argc, char* argv[])
 	//printAllMessagesOfEachTrack(midifile);
 	//pritConcurrentMessageOfAllTrack(midifile);
 	printAllMessagesOfEachTrack(midifile, options);
+	printAllMessagesOfEachTrack_DST(midifile, options);
 
 	return 0;
 }
@@ -119,6 +121,51 @@ void printAllMessagesOfEachTrack(MidiFile& midifile, Options options)
 			{ 
 				tmpStr += hexify(midifile[track][event][i]) + ' '; 
 			} 
+			tmpStr += "\n";
+			ostr << tmpStr;
+		} 
+	}
+
+	ostr.close();
+}
+
+void printAllMessagesOfEachTrack_DST(MidiFile& midifile, Options options)
+{
+	string fn = options.getArg(1) + "_EachTrack_DST.txt";
+	ofstream ostr(fn);		
+
+	int tempo = midifile.getTempo();
+	int tpqs = midifile.getTicksPerQuarterNote();
+	double usecPerTick = (double)(60 * 1000000 / tpqs / tempo);
+
+	string tmpStr = "TPQ: " + to_string((long long)tpqs) + ", usecPerTick = " + to_string((long double)usecPerTick) + "\n";
+	ostr << tmpStr;
+
+	tmpStr = "Tempo: " + to_string((long long)midifile.getTempo()) + "\n";
+	ostr << tmpStr;
+
+	int tracks = midifile.getTrackCount();
+	if (tracks > 1) 
+	{ 
+		tmpStr = "TRACKS: " + to_string((long long) tracks)  + "\n";
+		ostr << tmpStr;
+	} 
+
+	for (int track=0; track < tracks; track++)
+	{
+		if (tracks > 1) 
+		{ 
+			tmpStr = "\nTrack " + to_string((long long) track)  + "\n";
+			ostr << tmpStr;
+		} 
+		for (int event=0; event < midifile[track].size(); event++)
+		{ 
+			tmpStr = "";
+			tmpStr += to_string((long long)midifile[track][event][1]) + "\t"; 
+			tmpStr += to_string((long long)midifile[track][event][1] * 1024 / 127);
+			double time2Tick = (double)(midifile[track][event].tick * usecPerTick / 1000);
+			tmpStr += "\t" + to_string((long long)time2Tick); 
+
 			tmpStr += "\n";
 			ostr << tmpStr;
 		} 
